@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>淫语翻译器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .age-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .age-modal {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border-radius: 0;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .age-modal h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .age-modal p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .age-modal .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .age-modal .age-btn {
+            padding: 12px 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .age-modal .age-btn.yes {
+            background: #333;
+            color: white;
+        }
+
+        .age-modal .age-btn.no {
+            background: #ddd;
+            color: #333;
+            border: 2px solid #bbb;
+        }
+
+        .age-modal .age-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            transition: filter 0.3s ease;
+        }
+
+        .container.blur {
+            filter: blur(8px);
+            opacity: 0.5;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .translator-card {
+            background: white;
+            border-radius: 0;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 20px;
+        }
+
+        .translation-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .text-box {
+            display: flex;
+            flex-direction: column;
+            height: 320px;
+        }
+
+        .text-box label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .text-box textarea {
+            flex: 1;
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e8e8e8;
+            border-radius: 0;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .text-box textarea:focus {
+            outline: none;
+            border-color: #333;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .text-box textarea::placeholder {
+            color: #aaa;
+        }
+
+        .output-box {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e8e8e8;
+            border-radius: 0;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 30px;
+            width: 100px;
+            border: none;
+            border-radius: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn.primary {
+            background: #333;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: #333;
+            border: 2px solid #333;
+        }
+
+        .action-btn.secondary:hover {
+            background: #333;
+            color: white;
+        }
+
+        .placeholder-text {
+            color: #aaa;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .translation-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .text-box {
+                height: 250px;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .action-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="age-overlay" id="ageOverlay">
+        <div class="age-modal">
+            <h2>年龄验证</h2>
+            <p>本网站包含NSFW内容，仅适合18岁以上用户访问。</p>
+            <p>请确认您已年满18岁。</p>
+            <div class="btn-group">
+                <button class="age-btn yes" id="ageYes">已满18岁</button>
+                <button class="age-btn no" id="ageNo">未满18岁</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <div class="header">
+            <h1>淫语翻译器</h1>
+        </div>
+
+        <div class="translator-card">
+            <div class="translation-area">
+                <div class="text-box">
+                    <label>输入文本</label>
+                    <textarea id="inputText" placeholder="请输入要翻译的中文文本..."></textarea>
+                </div>
+
+                <div class="text-box">
+                    <label>翻译结果</label>
+                    <div class="output-box" id="outputText"><span class="placeholder-text">翻译结果将显示在这里...</span></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="action-btn primary" id="translateBtn">翻译</button>
+                <button class="action-btn secondary" id="clearBtn">清空</button>
+                <button class="action-btn secondary" id="copyBtn">复制</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ageOverlay = document.getElementById('ageOverlay');
+        const ageYes = document.getElementById('ageYes');
+        const ageNo = document.getElementById('ageNo');
+        const mainContainer = document.getElementById('mainContainer');
+
+        mainContainer.classList.add('blur');
+
+        ageYes.addEventListener('click', () => {
+            ageOverlay.style.display = 'none';
+            mainContainer.classList.remove('blur');
+        });
+
+        ageNo.addEventListener('click', () => {
+            alert('您必须年满18岁才能访问本网站。');
+            window.location.href = 'about:blank';
+        });
+
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const translateBtn = document.getElementById('translateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+
+        function translateText(text) {
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                const char = text[i];
+                if (["，", "。", ",", "."].includes(char)) {
+                    result += '……' + (Math.random() < 0.5 ? '' : '❤');
+                } else if (["!", "！", "?", "？"].includes(char)) {
+                    result += '❤';
+                } else if (/[\u4E00-\u9FFF]/.test(char)) {
+                    if (Math.random() > 0.4) {
+                        result += char;
+                    } else if (Math.random() < 0.3) {
+                        result += '嗯~';
+                    } else if (Math.random() < 0.5) {
+                        result += '啊~';
+                    } else {
+                        result += '❤~~~';
+                    }
+                } else {
+                    result += char;
+                }
+            }
+            return result;
+        }
+
+        translateBtn.addEventListener('click', () => {
+            const text = inputText.value.trim();
+            if (!text) {
+                outputText.innerHTML = '<span class="placeholder-text">翻译结果将显示在这里...</span>';
+                return;
+            }
+            
+            outputText.innerHTML = '<span class="placeholder-text">翻译结果将显示在这里...</span>';
+            
+            setTimeout(() => {
+                const translated = translateText(text);
+                outputText.textContent = translated || '翻译失败，请重试';
+            }, 300);
+        });
+
+        clearBtn.addEventListener('click', () => {
+            inputText.value = '';
+            outputText.innerHTML = '<span class="placeholder-text">翻译结果将显示在这里...</span>';
+        });
+
+        copyBtn.addEventListener('click', async () => {
+            const text = outputText.textContent;
+            if (text === '翻译结果将显示在这里...' || text === '翻译中...') {
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                copyBtn.innerHTML = '<span>✅</span><span>已复制</span>';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<span>📋</span><span>复制</span>';
+                }, 2000);
+            } catch (err) {
+                console.error('复制失败:', err);
+            }
+        });
+
+        inputText.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                translateBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
